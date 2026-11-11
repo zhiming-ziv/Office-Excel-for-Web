@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
   const results = [];
   try {
     for (const dense of [false, true]) {
-      const page = await browser.newPage({ colorScheme: 'light', viewport: { width: 1400, height: 800 } });
+      const page = await browser.newPage({ locale: 'zh-CN', colorScheme: 'light', viewport: { width: 1400, height: 800 } });
       await page.goto('http://127.0.0.1:4173/');
       await page.waitForFunction(() => window.__excelTool);
       await page.addInitScript((dense) => {

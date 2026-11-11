@@ -23,12 +23,12 @@ export async function readWorkbookMetadata(buffer) {
   const zip = await JSZip.loadAsync(buffer);
   const warnings = new Set();
   for (const name of Object.keys(zip.files)) {
-    if (/vbaProject\.bin$/i.test(name)) warnings.add('宏');
-    if (/^xl\/media\//.test(name)) warnings.add('图片');
-    if (/^xl\/charts\/.*\.xml$/.test(name)) warnings.add('图表');
-    if (/^xl\/pivotTables\//.test(name)) warnings.add('透视表');
-    if (/^xl\/threadedComments\//.test(name)) warnings.add('线程批注');
-    if (/^xl\/externalLinks\//.test(name)) warnings.add('外部链接');
+    if (/vbaProject\.bin$/i.test(name)) warnings.add('macros');
+    if (/^xl\/media\//.test(name)) warnings.add('images');
+    if (/^xl\/charts\/.*\.xml$/.test(name)) warnings.add('charts');
+    if (/^xl\/pivotTables\//.test(name)) warnings.add('pivotTables');
+    if (/^xl\/threadedComments\//.test(name)) warnings.add('threadedComments');
+    if (/^xl\/externalLinks\//.test(name)) warnings.add('externalLinks');
   }
   const workbook = await xml(zip, 'xl/workbook.xml');
   const rels = await xml(zip, 'xl/_rels/workbook.xml.rels');
@@ -58,9 +58,9 @@ export async function readWorkbookMetadata(buffer) {
       }
     }
     hiddenSizes.set(sheet.getAttribute('name'), sizes);
-    for (const [tag, label] of [['autoFilter', '筛选条件'], ['dataValidations', '数据验证'],
-      ['conditionalFormatting', '条件格式'], ['hyperlinks', '超链接'], ['sheetProtection', '工作表保护'],
-      ['tableParts', '结构化表格']]) {
+    for (const [tag, label] of [['autoFilter', 'filters'], ['dataValidations', 'validation'],
+      ['conditionalFormatting', 'conditionalFormatting'], ['hyperlinks', 'hyperlinks'], ['sheetProtection', 'protection'],
+      ['tableParts', 'tables']]) {
       if (elements(doc, tag).length) warnings.add(label);
     }
     const sheetRels = await xml(zip, relsPath(part));

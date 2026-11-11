@@ -7,7 +7,7 @@ const OUT = path.join(__dirname, '..', '.e2e-downloads', 'rename');
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
-  const ctx = await browser.newContext({ viewport: { width: 1600, height: 900 }, acceptDownloads: true });
+  const ctx = await browser.newContext({ locale: 'zh-CN', viewport: { width: 1600, height: 900 }, acceptDownloads: true });
   const page = await ctx.newPage();
   const errs = [];
   page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));

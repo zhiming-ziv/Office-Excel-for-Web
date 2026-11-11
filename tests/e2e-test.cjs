@@ -63,7 +63,7 @@ async function zipCheck(file) {
     executablePath: CHROME,
     args: ['--no-sandbox', '--disable-dev-shm-usage'],
   });
-  const context = await browser.newContext({
+  const context = await browser.newContext({ locale: 'zh-CN',
     viewport: { width: 1600, height: 900 },
     acceptDownloads: true,
   });

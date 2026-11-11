@@ -4,7 +4,7 @@ const { chromium } = require('playwright-core');
 (async () => {
   const browser = await chromium.launch({ executablePath: require('./browser-path.cjs') });
   try {
-    const page = await browser.newPage({ colorScheme: 'dark', viewport: { width: 1400, height: 800 } });
+    const page = await browser.newPage({ locale: 'zh-CN', colorScheme: 'dark', viewport: { width: 1400, height: 800 } });
     await page.addInitScript(() => {
       localStorage.setItem('excel-tool:autosave:v1', JSON.stringify({ name: '滚动.xlsx', sheets: [{
         name: '滚动', index: 0, status: 1, row: 2000, column: 100, defaultRowHeight: 19, defaultColWidth: 73,

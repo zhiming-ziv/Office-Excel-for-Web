@@ -26,7 +26,7 @@ const { chromium } = require('playwright-core');
   await fixture.xlsx.writeFile(source);
   const browser = await chromium.launch({ executablePath: require('./browser-path.cjs') });
   try {
-    const page = await browser.newPage({ colorScheme: 'light', acceptDownloads: true });
+    const page = await browser.newPage({ locale: 'zh-CN', colorScheme: 'light', acceptDownloads: true });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('dialog', (d) => d.accept());

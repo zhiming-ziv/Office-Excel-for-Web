@@ -18,7 +18,7 @@ function check(name, ok, detail) {
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
-  const context = await browser.newContext({ viewport: { width: 1400, height: 800 } });
+  const context = await browser.newContext({ locale: 'zh-CN', viewport: { width: 1400, height: 800 } });
   const page = await context.newPage();
 
   const errors = [];

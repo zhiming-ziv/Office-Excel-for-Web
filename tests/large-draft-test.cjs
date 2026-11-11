@@ -4,7 +4,7 @@ const { chromium } = require('playwright-core');
 (async () => {
   const browser = await chromium.launch({ executablePath: require('./browser-path.cjs') });
   try {
-    const page = await browser.newPage({ colorScheme: 'light' });
+    const page = await browser.newPage({ locale: 'zh-CN', colorScheme: 'light' });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('dialog', (d) => d.accept());

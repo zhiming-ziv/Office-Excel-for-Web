@@ -96,7 +96,7 @@ function findLightRegions(img, threshold = 170, minPixels = 12) {
 
 (async () => {
   const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
-  const context = await browser.newContext({ viewport: { width: 1080, height: 600 }, acceptDownloads: true, deviceScaleFactor: 1 });
+  const context = await browser.newContext({ locale: 'zh-CN', viewport: { width: 1080, height: 600 }, acceptDownloads: true, deviceScaleFactor: 1 });
   const page = await context.newPage();
   await page.goto(APP, { waitUntil: 'networkidle' });
   await page.evaluate(() => localStorage.setItem('excel-tool:theme', 'dark'));

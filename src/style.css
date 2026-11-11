@@ -118,6 +118,21 @@ body {
   flex-wrap: nowrap;
 }
 
+.language-select {
+  max-width: 112px;
+  min-height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  background: var(--btn-bg);
+  color: var(--text);
+  font: inherit;
+}
+.language-select:focus-visible { outline: 2px solid var(--excel-green); outline-offset: 2px; }
+.language-select:disabled { opacity: 0.6; }
+#status-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#autosave-state { flex-shrink: 0; white-space: nowrap; }
+
 .fname {
   max-width: 240px;
   overflow: hidden;
@@ -293,6 +308,18 @@ body {
   .fname-input { max-width: 120px; }
   .btn { padding: 7px 10px; }
   .btn.icon-only { padding: 7px 8px; }
+}
+
+@media (max-width: 1000px) {
+  #topbar { height: auto; min-height: 52px; flex-wrap: wrap; padding: 8px 14px; gap: 8px; }
+  .actions { flex-wrap: wrap; }
+  #statusbar .hint { display: none; }
+}
+
+@media (max-width: 600px) {
+  .actions { gap: 4px; }
+  .btn { padding: 6px; }
+  .fname, .fname-input { max-width: 100px; }
 }
 #compatibility-notice {
   padding: 6px 16px;

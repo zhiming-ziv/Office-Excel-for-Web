@@ -23,7 +23,7 @@ function check(name, ok, detail) {
   fs.writeFileSync(csvPath, '名称,数量\n确认测试,1\n', 'utf8');
 
   const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
-  const context = await browser.newContext({ viewport: { width: 1600, height: 900 }, acceptDownloads: true });
+  const context = await browser.newContext({ locale: 'zh-CN', viewport: { width: 1600, height: 900 }, acceptDownloads: true });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));

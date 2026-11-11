@@ -9,7 +9,7 @@ const OUT = path.join(__dirname, '..', '.e2e-downloads');
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
-  const context = await browser.newContext({ viewport: { width: 1600, height: 900 }, colorScheme: 'light', deviceScaleFactor: 2 });
+  const context = await browser.newContext({ locale: 'zh-CN', viewport: { width: 1600, height: 900 }, colorScheme: 'light', deviceScaleFactor: 2 });
   const page = await context.newPage();
   const errs = [];
   page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));

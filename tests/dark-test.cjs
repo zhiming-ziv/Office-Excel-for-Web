@@ -15,7 +15,7 @@ const OUT = path.join(__dirname, '..', '.e2e-downloads');
   fs.rmSync(savedPath, { force: true });
 
   const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
-  const context = await browser.newContext({
+  const context = await browser.newContext({ locale: 'zh-CN',
     viewport: { width: 1600, height: 900 },
     colorScheme: 'light', // 默认浅色，与未表态用户一致
     acceptDownloads: true,

@@ -39,7 +39,7 @@ function check(name, ok, detail) {
   fs.writeFileSync(formulaPath, '=1+1,-5,@cmd,+7,normal\n', 'utf8');
 
   const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
-  const context = await browser.newContext({ viewport: { width: 1400, height: 800 }, acceptDownloads: true });
+  const context = await browser.newContext({ locale: 'zh-CN', viewport: { width: 1400, height: 800 }, acceptDownloads: true });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));

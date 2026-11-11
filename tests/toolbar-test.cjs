@@ -23,7 +23,7 @@ function check(name, ok, detail) {
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
-  const context = await browser.newContext({ viewport: { width: 1600, height: 900 }, colorScheme: 'light' });
+  const context = await browser.newContext({ locale: 'zh-CN', viewport: { width: 1600, height: 900 }, colorScheme: 'light' });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));

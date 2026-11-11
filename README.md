@@ -32,6 +32,17 @@ npm run preview # 启动本地服务（默认 http://127.0.0.1:4173）
 | 多工作表 | 支持多 sheet 切换、新建、重命名、隐藏 |
 | 快捷键 | `Ctrl+N` 新建、`Ctrl+O` 打开、`Ctrl+S` 保存 |
 | 主题切换 | 右上角月亮/太阳按钮切换浅色 / 深色主题；选择会记住，刷新不丢失；首次访问跟随系统偏好 |
+| 界面语言 | 简体中文、繁体中文、英文；记住手动选择，首次访问匹配浏览器语言 |
+
+## 多语言
+
+顶部语言选择器同时控制应用界面和 Luckysheet 工具栏。优先使用已保存的语言设置，其次匹配浏览器语言；未支持的语言回退为英文。繁体中文覆盖 `zh-TW`、`zh-HK`、`zh-MO` 和 `zh-Hant`，简体中文覆盖 `zh-CN`、`zh-SG` 和 `zh-Hans`。
+
+切换时会先结束单元格编辑、等待已有草稿事务，再保存最新内容并刷新。工作簿内容恢复，撤销历史清空；切换前会说明这一点。草稿或语言设置写入失败时不刷新，保留当前内容和语言。文件导入期间暂时不能切换。
+
+界面语言不会重命名已有文件或工作表，也不会转换公式、日期、货币、数字格式或 CSV 分隔符。新建文件使用当前语言的默认文件名。兼容性警告以稳定功能标识保存，已有草稿中的中文警告会自动迁移。
+
+应用词典位于 `src/locales/`，由 `src/i18n.js` 统一处理占位符、语言匹配和缺失文案回退。引擎使用其内置语言包，其中少量历史译法可能与应用文案不同；浏览器原生确认框的按钮语言由浏览器决定。
 
 ## 技术栈
 
@@ -76,6 +87,9 @@ npm run preview # 启动本地服务（默认 http://127.0.0.1:4173）
 │   ├── main.js         # 主逻辑：打开/保存/CSV/草稿/拖拽/主题/重命名
 │   ├── draft-store.js  # 小草稿同步保存、大草稿 IndexedDB 事务与迁移
 │   ├── workbook-metadata.js # 批注、隐藏尺寸与功能兼容性检测
+│   ├── i18n.js         # 语言匹配、词典读取与静态界面翻译
+│   ├── locales/        # 简体中文、繁体中文、英文词典
+│   ├── warning-codes.js # 兼容性警告标识与旧草稿迁移
 │   ├── jquery-global.js# Luckysheet 依赖的全局 jQuery 挂载（优先复用插件包实例）
 │   ├── luckysheet-dark.css # 深色主题下 Luckysheet 内置界面的覆盖样式
 │   └── style.css       # 界面样式（浅色/深色双主题 CSS 变量）
@@ -112,6 +126,8 @@ node tests/toolbar-test.cjs                  # 工具栏逐项功能验证（深
 node tests/fidelity-test.cjs                 # 批注、旋转、隐藏行列的文件往返
 node tests/large-draft-test.cjs              # IndexedDB 迁移、失败回滚、重试与恢复
 node tests/theme-scroll-test.cjs             # 深色远距离滚动补绘与空白对象回收
+node tests/i18n-unit-test.cjs                # 词典完整性、占位符、语言匹配与警告迁移
+node tests/i18n-test.cjs                     # 三语言界面、导出、切换保护、存储事务与窄屏布局
 node tests/performance-test.cjs              # 稀疏/密集大表格基准，产物写入 .e2e-downloads/
 ```
 
@@ -120,6 +136,8 @@ node tests/performance-test.cjs              # 稀疏/密集大表格基准，�
 样例文件 `sample.xlsx` 在仓库根目录；测试脚本以自身所在目录为基准定位资源（产物统一写入根目录 `.e2e-downloads/`，已忽略），可在任意路径的仓库副本中运行。
 
 测试通过 `tests/browser-path.cjs` 共用浏览器探测，支持 Windows、macOS 与 Linux 的常见 Chrome/Chromium 路径；也可用 `CHROME_PATH` 指定可执行文件。浏览器需自行安装。
+
+既有功能回归固定使用 `zh-CN` 浏览器区域，避免测试结果依赖运行机器的语言。多语言专项分别验证三种语言的应用界面和引擎工具栏。
 
 ## 主题实现说明
 

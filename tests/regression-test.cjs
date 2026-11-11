@@ -13,7 +13,7 @@ const CHROME = require('./browser-path.cjs');
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch({ executablePath: CHROME });
   try {
-    const page = await browser.newPage({ acceptDownloads: true, colorScheme: 'light' });
+    const page = await browser.newPage({ locale: 'zh-CN', acceptDownloads: true, colorScheme: 'light' });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => {

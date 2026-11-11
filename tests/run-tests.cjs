@@ -2,7 +2,7 @@
 const { spawn } = require('node:child_process');
 const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
-const scripts = ['e2e-test', 'dark-test', 'autosave-test', 'save-test', 'csv-test',
+const scripts = ['i18n-unit-test', 'i18n-test', 'e2e-test', 'dark-test', 'autosave-test', 'save-test', 'csv-test',
   'regression-test', 'fidelity-test', 'large-draft-test', 'theme-scroll-test', 'rename-test', 'toolbar-test', 'audit-dark'];
 const selected = process.argv.length > 2 ? process.argv.slice(2) : scripts;
 if (selected.some((name) => !scripts.includes(name))) throw new Error('未知测试名称');
