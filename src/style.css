@@ -294,3 +294,10 @@ body {
   .btn { padding: 7px 10px; }
   .btn.icon-only { padding: 7px 8px; }
 }
+#compatibility-notice {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+}

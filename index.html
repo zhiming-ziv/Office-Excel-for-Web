@@ -55,9 +55,11 @@
 
     <div id="statusbar">
       <span id="status-text">准备中…</span>
-      <span class="hint">提示：可直接把 .xlsx / .csv 文件拖入窗口打开；公式、样式、合并单元格均支持</span>
+      <span id="autosave-state" role="status">正在读取草稿…</span>
+      <span class="hint">支持 XLSX / XLSM / CSV；保存为 XLSX，宏、图片、图表及高级功能不保留</span>
     </div>
 
+    <div id="compatibility-notice" role="status" hidden></div>
     <main id="luckysheet"></main>
 
     <div id="drop-overlay">

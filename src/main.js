@@ -2,6 +2,8 @@ import './jquery-global.js';
 import luckysheet from 'luckysheet';
 import LuckyExcel from 'luckyexcel';
 import ExcelJS from 'exceljs';
+import { readWorkbookMetadata, applyWorkbookMetadata, exportRotation } from './workbook-metadata.js';
+import { LEGACY_DRAFT_KEY, loadDraft, saveDraft, nextDraftTime } from './draft-store.js';
 
 import 'luckysheet/dist/css/luckysheet.css';
 // plugins/plugins.css = Font Awesome；plugins/css/pluginsCss.css = spectrum 取色器 + jQuery UI + 图标字体
@@ -14,7 +16,7 @@ import './luckysheet-dark.css';
 
 /* ============================== 常量与状态 ============================== */
 
-const STORAGE_KEY = 'excel-tool:autosave:v1';
+const STORAGE_KEY = LEGACY_DRAFT_KEY;
 const THEME_KEY = 'excel-tool:theme';
 /* 深色主题注入到表格的默认底色 / 文字色（与 style.css 中 --grid-surface / --grid-text 保持一致） */
 // 使用等价的 rgba 表达式，与取色器写入的十六进制用户颜色区分。
@@ -37,6 +39,25 @@ let toastTimer = null;
 let autosaveWarned = false;
 let autosaveFailed = false;
 let autosavePending = false;
+let importSequence = 0;
+let importWarnings = [];
+let autosaveRevision = 0;
+let autosaveInFlight = null;
+let autosaveMetrics = null;
+
+function showCompatibilityNotice() {
+  const warnings = new Set(importWarnings);
+  for (const sheet of luckysheet.getLuckysheetfile() || []) {
+    for (const [key, label] of [['filter', '筛选条件'], ['filter_select', '筛选范围'], ['dataVerification', '数据验证'],
+      ['luckysheet_conditionformat_save', '条件格式'], ['images', '图片'], ['chart', '图表'], ['hyperlink', '超链接']]) {
+      if (sheet[key] && Object.keys(sheet[key]).length) warnings.add(label);
+    }
+  }
+  const notice = $('#compatibility-notice');
+  notice.hidden = warnings.size === 0;
+  notice.textContent = warnings.size ? `保存为 XLSX 时不会保留：${[...warnings].join('、')}。请保留原文件。` : '';
+  return warnings.size > 0;
+}
 
 function activeSheetPosition(sheets = luckysheet.getLuckysheetfile() || []) {
   const active = luckysheet.getSheet();
@@ -183,20 +204,45 @@ function themeSheetGrids() {
 }
 
 /* 深色主题：给单个网格中“无样式”的单元格注入底色 / 文字色 */
-function injectThemeIntoGrid(grid) {
+function injectThemeIntoGrid(grid, sheet = {}) {
   if (!Array.isArray(grid)) return false;
+  const viewport = $('#luckysheet-cell-main');
+  const zoom = Number(sheet.zoomRatio) || 1;
+  const config = sheet.config || {};
+  const bounds = (count, sizes, hidden, offset, extent, defaultSize) => {
+    let start = 0, end = count - 1, position = 0;
+    for (let i = 0; i < count; i++) {
+      const size = Object.hasOwn(hidden || {}, i) ? 0 : Math.round((Number(sizes?.[i] ?? defaultSize) + 1) * zoom);
+      if (position + size < offset) start = i + 1;
+      position += size;
+      if (position > offset + extent) { end = i; break; }
+    }
+    return [Math.max(0, start - 4), Math.min(count - 1, end + 4)];
+  };
+  const rows = bounds(grid.length, config.rowlen, config.rowhidden, viewport?.scrollTop || 0, viewport?.clientHeight || 800, sheet.defaultRowHeight || 19);
+  const columns = bounds(grid.reduce((n, row) => Math.max(n, row?.length || 0), 0), config.columnlen, config.colhidden,
+    viewport?.scrollLeft || 0, viewport?.clientWidth || 1400, sheet.defaultColWidth || 73);
+  const frozen = frozenToView(sheet.frozen) || {};
   let changed = false;
   for (let r = 0; r < grid.length; r++) {
     const row = grid[r];
     if (!Array.isArray(row)) continue;
     for (let c = 0; c < row.length; c++) {
       const cell = row[c];
+      const visible = (r < (frozen.ySplit || 0) || (r >= rows[0] && r <= rows[1])) &&
+        (c < (frozen.xSplit || 0) || (c >= columns[0] && c <= columns[1]));
       if (cell == null) {
+        if (!visible) continue;
         row[c] = { bg: THEME_SURFACE, fc: THEME_TEXT, __themeBg: true, __themeFc: true };
         changed = true;
         continue;
       }
       if (typeof cell !== 'object' || Array.isArray(cell)) continue;
+      if (!visible && !cellHasContent(cell) && (cell.__themeBg || cell.__themeFc) && stripThemeCell(cell) == null) {
+        row[c] = null;
+        changed = true;
+        continue;
+      }
       if (cell.__themeBg && cell.bg !== THEME_SURFACE) delete cell.__themeBg;
       if (cell.__themeFc && cell.fc !== THEME_TEXT) delete cell.__themeFc;
       let touched = false;
@@ -220,9 +266,10 @@ function injectThemeIntoAllSheets() {
   if (currentTheme() !== 'dark') return false;
   let changed = false;
   try {
-    themeSheetGrids().forEach((grid) => {
-      if (injectThemeIntoGrid(grid)) changed = true;
-    });
+    // 非活动表等切换时再处理，避免每次编辑扫描整个工作簿。
+    const sheet = luckysheet.getSheet();
+    const grid = luckysheet.flowdata();
+    if (injectThemeIntoGrid(grid, sheet)) changed = true;
   } catch (e) {
     console.warn('应用深色主题失败：', e);
   }
@@ -463,6 +510,7 @@ function blankSheets() {
 }
 
 function createWorkbook(sheets, title) {
+  autosaveRevision++;
   autosaveWarned = false;
   autosaveFailed = false;
   if (title) currentFileName = ensureExcelName(title);
@@ -475,7 +523,10 @@ function createWorkbook(sheets, title) {
 
   // 深色主题：创建前先注入，保证首帧就是深色网格（LuckyExcel 导入的是 celldata 格式，
   // 首帧仍是浅色，交由 workbookCreateAfter 里补偿注入 + refresh）
-  if (currentTheme() === 'dark') sheets.forEach((sheet) => injectThemeIntoGrid(sheet.data));
+  if (currentTheme() === 'dark') {
+    const sheet = sheets.find((item) => item.status === 1) || sheets[0];
+    if (sheet) injectThemeIntoGrid(sheet.data, sheet);
+  }
 
   luckysheet.create({
     container: 'luckysheet',
@@ -517,54 +568,77 @@ function createWorkbook(sheets, title) {
   });
 
   updateStatus();
+  showCompatibilityNotice();
 }
 
-function restoreOrCreate() {
-  let saved = null;
-  try {
-    saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-  } catch (e) {
-    saved = null;
-  }
+async function restoreOrCreate() {
+  $('#app').inert = true;
+  const { draft: saved, warning } = await loadDraft();
+  importWarnings = saved?.warnings || [];
   if (saved && Array.isArray(saved.sheets) && saved.sheets.length > 0) {
     createWorkbook(saved.sheets, saved.name || '未命名.xlsx');
     setTimeout(() => toast('已恢复上次编辑的内容'), 400);
   } else {
     createWorkbook(blankSheets(), '未命名.xlsx');
   }
+  $('#app').inert = false;
+  if (warning) toast('大草稿存储暂不可用，请保留原文件并及时下载保存', true);
 }
 
 /* ============================== 自动保存（草稿） ============================== */
 
 function scheduleAutosave(delay = 800) {
   clearTimeout(autoSaveTimer);
+  autosaveRevision++;
   autosavePending = true;
+  $('#autosave-state').textContent = '草稿待保存';
   autoSaveTimer = setTimeout(flushAutosave, delay);
 }
 
 function flushAutosave() {
   clearTimeout(autoSaveTimer);
   autoSaveTimer = null;
-  if (!autosavePending) return;
-  try {
-    const payload = JSON.stringify({ name: currentFileName, sheets: serializeSheets() });
-    localStorage.setItem(STORAGE_KEY, payload);
+  if (!autosavePending || autosaveInFlight) return;
+  const revision = autosaveRevision;
+  const started = performance.now();
+  const success = () => {
+    if (revision !== autosaveRevision) return;
     autosaveWarned = false;
     autosaveFailed = false;
     autosavePending = false;
-  } catch (e) {
-    // 写入失败时保留上一次成功的草稿：删掉会让用户彻底失去恢复机会
+    $('#autosave-state').textContent = '草稿已保存';
+  };
+  const failure = (e) => {
+    if (revision !== autosaveRevision) return;
     console.warn('自动保存失败：', e);
     autosaveFailed = true;
+    $('#autosave-state').textContent = '草稿保存失败，请下载保存';
     if (!autosaveWarned) {
       autosaveWarned = true;
-      toast('草稿自动保存失败：浏览器存储空间不足，请及时下载保存', true);
+      toast('草稿自动保存失败：浏览器存储不可用或空间不足，请及时下载保存', true);
     }
+  };
+  try {
+    const large = (luckysheet.getLuckysheetfile() || []).some((sheet) =>
+      (sheet.row || sheet.data?.length || 0) * (sheet.column || sheet.data?.[0]?.length || 0) > 20000);
+    const payload = { name: currentFileName, savedAt: nextDraftTime(), warnings: importWarnings, sheets: serializeSheets(large) };
+    const pending = saveDraft(payload, large);
+    autosaveMetrics = { snapshotMs: performance.now() - started, backend: pending ? 'IndexedDB' : 'localStorage' };
+    if (pending) {
+      $('#autosave-state').textContent = '正在保存草稿…';
+      autosaveInFlight = pending;
+      pending.then(success, failure).finally(() => {
+        autosaveInFlight = null;
+        if (autosavePending && revision !== autosaveRevision) flushAutosave();
+      });
+    } else success();
+  } catch (e) {
+    failure(e);
   }
 }
 
 /* 把运行时数据归一化成「完整网格」形式，供保存 / 导出 / 草稿使用 */
-function serializeSheets() {
+function serializeSheets(sparse = false) {
   const sheets = luckysheet.getLuckysheetfile() || [];
   const activeSheetIndex = activeSheetPosition(sheets);
   return sheets.map((sheet, index) => {
@@ -586,6 +660,33 @@ function serializeSheets() {
     if (!Array.isArray(grid) || grid.length === 0) grid = getSheetGrid(sheet);
     if (!config) config = sheet.config || {};
     // 深色主题注入的底色/文字色只属于运行时显示，写出的文件必须剥离
+    if (sparse) {
+      // 抽样选择表示形式：密集表保留二维数组，避免为每个值额外创建坐标对象。
+      let sampled = 0, occupied = 0;
+      for (let r = 0; r < grid.length; r += Math.max(1, Math.floor(grid.length / 20))) {
+        const row = grid[r] || [];
+        for (let c = 0; c < row.length; c += Math.max(1, Math.floor(row.length / 20))) {
+          sampled++;
+          if (stripThemeCell(row[c]) != null) occupied++;
+        }
+      }
+      if (occupied > sampled * 0.35) {
+        const result = { ...sheet, config, data: stripThemeFromGrid(grid) };
+        delete result.celldata;
+        return result;
+      }
+      const celldata = [];
+      for (let r = 0; r < grid.length; r++) {
+        for (let c = 0; c < (grid[r]?.length || 0); c++) {
+          const v = stripThemeCell(grid[r][c]);
+          if (v != null) celldata.push({ r, c, v });
+        }
+      }
+      const result = { ...sheet, config, celldata, row: Math.max(sheet.row || 0, grid.length),
+        column: grid.reduce((n, row) => Math.max(n, row?.length || 0), sheet.column || 0) };
+      delete result.data;
+      return result;
+    }
     const cleanGrid = stripThemeFromGrid(grid);
     const result = Object.assign({}, sheet, { data: cleanGrid, config });
     // luckysheet 会用 celldata 与 data 同步（refresh 后会从网格重建），同样需要剥离
@@ -638,7 +739,7 @@ function workbookHasContent() {
   }
 }
 
-function handleFile(file) {
+async function handleFile(file) {
   if (!file) return;
   const name = file.name.toLowerCase();
   if (name.endsWith('.xls')) {
@@ -652,10 +753,13 @@ function handleFile(file) {
   if (workbookHasContent() && !window.confirm('当前工作簿有内容，打开新文件会覆盖自动保存的草稿。\n确定继续？')) {
     return;
   }
+  const sequence = ++importSequence;
   if (name.endsWith('.csv')) {
     file
       .arrayBuffer()
       .then((buffer) => {
+        if (sequence !== importSequence) return;
+        importWarnings = [];
         const sheetName = file.name.replace(/\.csv$/i, '');
         createWorkbook([csvToSheet(decodeCsv(buffer), sheetName)], file.name);
         toast('已打开 ' + file.name);
@@ -665,14 +769,25 @@ function handleFile(file) {
         toast('CSV 读取失败', true);
       });
   } else if (/\.(xlsx|xlsm)$/.test(name)) {
-    LuckyExcel.transformExcelToLucky(file, (exportJson) => {
-      if (!exportJson || !Array.isArray(exportJson.sheets) || exportJson.sheets.length === 0) {
-        toast('文件解析失败：格式不支持或文件已损坏', true);
-        return;
-      }
-      createWorkbook(exportJson.sheets, file.name);
-      toast('已打开 ' + file.name);
-    });
+    try {
+      const metadata = await readWorkbookMetadata(await file.arrayBuffer());
+      if (sequence !== importSequence) return;
+      LuckyExcel.transformExcelToLucky(file, (exportJson) => {
+        if (sequence !== importSequence) return;
+        if (!exportJson || !Array.isArray(exportJson.sheets) || exportJson.sheets.length === 0) {
+          toast('文件解析失败：格式不支持或文件已损坏', true);
+          return;
+        }
+        applyWorkbookMetadata(exportJson.sheets, metadata);
+        importWarnings = metadata.warnings;
+        if (name.endsWith('.xlsm')) importWarnings = [...new Set([...importWarnings, '宏'])];
+        createWorkbook(exportJson.sheets, file.name);
+        toast('已打开 ' + file.name);
+      });
+    } catch (e) {
+      console.warn('读取工作簿失败：', e);
+      toast('文件解析失败：格式不支持或文件已损坏', true);
+    }
   } else {
     toast('仅支持 .xlsx / .xlsm / .csv 文件', true);
   }
@@ -765,6 +880,8 @@ function csvToSheet(text, sheetName = 'Sheet1') {
 
 async function saveFile() {
   try {
+    luckysheet.exitEditMode();
+    const limited = showCompatibilityNotice();
     const wb = buildWorkbook();
     const buffer = await wb.xlsx.writeBuffer();
     const fileName = ensureSaveName(currentFileName);
@@ -780,7 +897,7 @@ async function saveFile() {
     );
     autosaveFailed = false; // 已成功导出到磁盘，离开页面无需再拦截
     autosaveWarned = false; // 若配额仍满，下次失败要重新提示
-    toast('已保存 ' + fileName + ' 到下载目录');
+    toast('已生成 ' + fileName + ' 下载' + (limited ? '；部分功能未保留，详见上方提示' : ''));
   } catch (e) {
     console.error(e);
     toast('保存失败：' + (e && e.message ? e.message : e), true);
@@ -895,7 +1012,14 @@ function buildWorkbook() {
         if (typeof obj.ht === 'number' && htMap[obj.ht]) al.horizontal = htMap[obj.ht];
         if (typeof obj.vt === 'number' && vtMap[obj.vt]) al.vertical = vtMap[obj.vt];
         if (obj.tb === 2) al.wrapText = true;
+        const rotation = exportRotation(obj);
+        if (rotation !== undefined) al.textRotation = rotation;
         if (Object.keys(al).length) exCell.alignment = al;
+        if (obj.ps && typeof obj.ps.value === 'string') {
+          // 只含批注的单元格也写出 <c> 节点，避免读取器忽略悬空批注引用。
+          if (exCell.value == null) exCell.value = '';
+          exCell.note = obj.ps.value;
+        }
 
         if (
           obj.ct &&
@@ -932,6 +1056,17 @@ function buildWorkbook() {
         const idx = parseInt(key, 10);
         if (!isNaN(idx) && idx >= 0) ws.getRow(idx + 1).height = pxToExcelHeight(config.rowlen[key]);
       }
+    }
+    for (const key of Object.keys(config.rowhidden || {})) {
+      if (/^\d+$/.test(key)) {
+        const row = ws.getRow(Number(key) + 1);
+        row.hidden = true;
+        // ExcelJS 会省略没有值且没有高度的行，显式高度保证空白隐藏行也写入。
+        if (!row.height) row.height = pxToExcelHeight(sheet.defaultRowHeight || 19);
+      }
+    }
+    for (const key of Object.keys(config.colhidden || {})) {
+      if (/^\d+$/.test(key)) ws.getColumn(Number(key) + 1).hidden = true;
     }
   });
 
@@ -1023,6 +1158,7 @@ function preserveExplicitColors() {
 
 function exportCSV() {
   try {
+    luckysheet.exitEditMode();
     const sheets = luckysheet.getLuckysheetfile() || [];
     const activeSheetIndex = activeSheetPosition(sheets);
     const sheet = sheets[activeSheetIndex] || sheets[0];
@@ -1181,16 +1317,22 @@ function bindFileNameRename() {
 }
 
 function bindEvents() {
+  document.addEventListener('scroll', (e) => {
+    if (e.target?.id === 'luckysheet-cell-main') scheduleThemeReinject(60);
+  }, true);
   // 自动保存失败后，关闭/刷新前提醒用户，避免新编辑内容无提示丢失
   window.addEventListener('beforeunload', (e) => {
     luckysheet.exitEditMode();
     flushAutosave();
-    if (!autosaveFailed) return;
+    if (!autosaveFailed && !autosavePending && !autosaveInFlight) return;
     e.preventDefault();
     e.returnValue = '';
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') flushAutosave();
+    if (document.visibilityState === 'hidden') {
+      luckysheet.exitEditMode();
+      flushAutosave();
+    }
   });
 
   $('#btn-save').addEventListener('click', saveFile);
@@ -1202,6 +1344,8 @@ function bindEvents() {
   $('#btn-new').addEventListener('click', () => {
     const ok = window.confirm('确定新建空白工作簿？\n当前内容将被清空（浏览器中的自动保存草稿也会被覆盖）。');
     if (!ok) return;
+    importSequence++;
+    importWarnings = [];
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (e) {
@@ -1271,4 +1415,5 @@ window.__excelTool = {
   luckysheet,
   getFileName: () => currentFileName,
   getTheme: currentTheme,
+  getAutosaveState: () => ({ pending: autosavePending, writing: !!autosaveInFlight, failed: autosaveFailed, ...autosaveMetrics }),
 };

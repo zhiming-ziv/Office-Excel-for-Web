@@ -4,12 +4,7 @@ const zlib = require('zlib');
 const path = require('path');
 const fs = require('fs');
 
-const CHROME = [
-  process.env.CHROME_PATH,
-  'C:/Program Files/Google/Chrome/Application/chrome.exe',
-  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
-].filter(Boolean).find((p) => fs.existsSync(p));
-if (!CHROME) throw new Error('未找到 Chrome，请设置环境变量 CHROME_PATH 指向 chrome.exe');
+const CHROME = require('./browser-path.cjs');
 const APP = 'http://127.0.0.1:4173/';
 
 /* ---- 极简 PNG 解码（Chromium 截图：8bit RGBA、非隔行） ---- */

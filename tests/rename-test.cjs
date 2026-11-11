@@ -2,11 +2,7 @@
 const { chromium } = require('playwright-core');
 const path = require('path');
 const fs = require('fs');
-const CHROME = [
-  process.env.CHROME_PATH,
-  'C:/Program Files/Google/Chrome/Application/chrome.exe',
-  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
-].filter(Boolean).find((p) => fs.existsSync(p));
+const CHROME = require('./browser-path.cjs');
 const OUT = path.join(__dirname, '..', '.e2e-downloads', 'rename');
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });

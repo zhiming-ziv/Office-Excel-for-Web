@@ -1,4 +1,4 @@
-/* 一键启动本地服务：缺依赖自动安装、缺构建产物自动构建，然后启动 preview 并打开浏览器 */
+/* 一键启动本地服务：检查依赖、重新构建，再启动 preview 并打开浏览器。 */
 const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -21,11 +21,9 @@ function runStep(args, label) {
 if (!fs.existsSync(path.join(ROOT, 'node_modules', 'vite'))) {
   runStep(['install'], '未检测到依赖，执行 npm install');
 }
-if (!fs.existsSync(path.join(ROOT, 'dist', 'index.html'))) {
-  runStep(['run', 'build'], '未检测到构建产物，执行 npm run build');
-}
+runStep(['run', 'build'], '构建当前源码，确保启动最新版本');
 
-console.log('\n服务地址：' + URL + '（按 Ctrl+C 停止）\n');
+console.log('\n构建完成，正在启动：' + URL + '（按 Ctrl+C 停止）\n');
 const child = spawn(npmLine(['run', 'preview', '--', '--port', PORT, '--strictPort', '--open']), {
   cwd: ROOT,
   stdio: 'inherit',

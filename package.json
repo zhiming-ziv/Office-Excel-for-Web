@@ -3,22 +3,25 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": "^22.0.0 || ^24.0.0"
+  },
   "scripts": {
     "start": "node start.cjs",
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node tests/run-tests.cjs"
   },
   "dependencies": {
     "exceljs": "^4.4.0",
     "jquery": "^3.7.1",
     "jquery-mousewheel": "^3.1.13",
+    "jszip": "^3.10.1",
     "luckyexcel": "^1.0.1",
     "luckysheet": "^2.1.13"
   },
   "devDependencies": {
-    "@esbuild/win32-x64": "^0.21.5",
-    "@rollup/rollup-win32-x64-msvc": "^4.64.5",
     "playwright-core": "^1.49.1",
     "vite": "^5.4.11"
   }

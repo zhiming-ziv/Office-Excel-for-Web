@@ -7,11 +7,7 @@ const ExcelJS = require('exceljs');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, '.e2e-downloads', 'regression');
-const CHROME = [process.env.CHROME_PATH,
-  'C:/Program Files/Google/Chrome/Application/chrome.exe',
-  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
-].filter(Boolean).find((p) => fs.existsSync(p));
-if (!CHROME) throw new Error('未找到 Chrome，请设置 CHROME_PATH');
+const CHROME = require('./browser-path.cjs');
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
