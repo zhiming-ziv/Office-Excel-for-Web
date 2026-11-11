@@ -1,0 +1,296 @@
+:root {
+  --excel-green: #217346;
+  --excel-green-hover: #1a5c38;
+
+  /* 浅色主题（默认） */
+  --bg: #f3f4f6;
+  --panel: #ffffff;
+  --panel-2: #f9fafb;
+  --chip-bg: #f3f4f6;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --text: #1f2937;
+  --text-secondary: #5f6673;
+  --statusbar-bg: #eef2f5;
+  --btn-bg: #ffffff;
+  --btn-hover: #f9fafb;
+  --btn-active: #f3f4f6;
+  --drop-bg: rgba(255, 255, 255, 0.96);
+  --drop-tint: rgba(33, 115, 70, 0.12);
+  --toast-bg: rgba(17, 24, 39, 0.92);
+  --toast-error-bg: rgba(185, 28, 28, 0.95);
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  /* 表格画布区域（Luckysheet 注入同色，保证深色下空白单元格与背景一致） */
+  --grid-surface: #ffffff;
+  --grid-text: #000000;
+  --danger: #dc2626;
+}
+
+[data-theme='dark'] {
+  --bg: #15171c;
+  --panel: #1f2229;
+  --panel-2: #262a33;
+  --chip-bg: #262a33;
+  --border: #333945;
+  --border-strong: #3f4653;
+  --text: #e8eaed;
+  --text-secondary: #9aa2ad;
+  --statusbar-bg: #1a1d24;
+  --btn-bg: #262a33;
+  --btn-hover: #2f343e;
+  --btn-active: #262a33;
+  --drop-bg: rgba(31, 34, 41, 0.96);
+  --drop-tint: rgba(33, 115, 70, 0.22);
+  --toast-bg: rgba(9, 11, 14, 0.94);
+  --toast-error-bg: rgba(153, 27, 27, 0.95);
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --grid-surface: #1e1f24;
+  --grid-text: #d7dae0;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ---------- 顶部工具栏 ---------- */
+#topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 52px;
+  padding: 0 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+  z-index: 10;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.logo { flex: 0 0 auto; }
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.brand-text .title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.brand-text .subtitle {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.fname {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: text;
+}
+
+.fname:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.fname-input {
+  width: 180px;
+  max-width: 240px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--panel);
+  border: 1px solid var(--excel-green);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--btn-bg);
+  color: var(--text);
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+}
+
+.btn:hover { background: var(--btn-hover); border-color: var(--border-strong); }
+.btn:active { background: var(--btn-active); }
+
+.btn.primary {
+  background: var(--excel-green);
+  border-color: var(--excel-green);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn.primary:hover {
+  background: var(--excel-green-hover);
+  border-color: var(--excel-green-hover);
+}
+
+/* 主题切换图标按钮 */
+.btn.icon-only {
+  padding: 7px 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-theme { display: block; }
+
+/* 浅色主题显示月亮（点击切到深色），深色主题显示太阳（点击切回浅色） */
+.icon-sun { display: none; }
+[data-theme='dark'] .icon-sun { display: block; }
+[data-theme='dark'] .icon-moon { display: none; }
+
+/* ---------- 状态栏 ---------- */
+#statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 26px;
+  padding: 0 14px;
+  background: var(--statusbar-bg);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex: 0 0 auto;
+  z-index: 5;
+}
+
+#statusbar .hint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 表格主体 ---------- */
+#luckysheet {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--grid-surface);
+}
+
+/*
+ * Luckysheet 底部「(在底部添加)」提示默认 #9C9C9C，
+ * 在浅灰底上对比度仅 2.47，统一改为次级文字色。
+ */
+[data-theme='light'] .luckysheet-bottom-controll-row span {
+  color: var(--text-secondary) !important;
+}
+
+/* ---------- 拖拽遮罩 ---------- */
+#drop-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--drop-tint);
+  backdrop-filter: blur(2px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  pointer-events: none;
+}
+
+#drop-overlay.show { display: flex; }
+
+.drop-box {
+  border: 2px dashed var(--excel-green);
+  border-radius: 16px;
+  background: var(--drop-bg);
+  color: var(--text);
+  padding: 48px 64px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.drop-icon { font-size: 40px; margin-bottom: 10px; }
+.drop-text { font-size: 16px; font-weight: 600; color: var(--excel-green); }
+
+/* ---------- Toast ---------- */
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 36px;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--toast-bg);
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity .25s, transform .25s;
+  z-index: 100000;
+  max-width: 70vw;
+  pointer-events: none;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#toast.error { background: var(--toast-error-bg); }
+
+/* ---------- 小屏适配 ---------- */
+@media (max-width: 860px) {
+  .brand-text .subtitle, #statusbar .hint { display: none; }
+  .fname,
+  .fname-input { max-width: 120px; }
+  .btn { padding: 7px 10px; }
+  .btn.icon-only { padding: 7px 8px; }
+}

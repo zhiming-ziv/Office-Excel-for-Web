@@ -1,0 +1,42 @@
+# ---- 依赖 ----
+node_modules/
+.pnp
+.pnp.js
+
+# ---- 构建产物 ----
+dist/
+dist-ssr/
+*.local
+
+# 由 vite.config.js 在 dev/build 时从 node_modules 自动同步生成，请勿提交
+public/luckysheet-plugin.js
+
+# ---- 测试 / 调试产物 ----
+.e2e-downloads/
+.e2e-*.png
+*-shot*.png
+
+# ---- 日志 ----
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# ---- 环境变量 ----
+.env
+.env.*
+!.env.example
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 缓存 ----
+.cache/
+.vite/
+coverage/
+*.tsbuildinfo

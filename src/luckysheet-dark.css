@@ -1,0 +1,394 @@
+/* ============================================================
+ * Luckysheet 内置 DOM 界面的深色覆盖
+ * Luckysheet 2.x 无原生深色模式，其工具栏 / 公式栏 / 页签栏 / 弹出菜单
+ * 均为硬编码浅色样式；这里在 [data-theme='dark'] 下用 !important 覆盖。
+ * 仅在深色主题生效，浅色主题完全不受影响。
+ * ============================================================ */
+
+/* ---------- 工具栏基础 ---------- */
+[data-theme='dark'] .luckysheet-toolbar-button,
+[data-theme='dark'] .luckysheet-toolbar-menu-button,
+[data-theme='dark'] .luckysheet-toolbar-combo-button,
+[data-theme='dark'] .luckysheet-toolbar-combo-button-input,
+[data-theme='dark'] .luckysheet-toolbar-combo-button-caption {
+  color: var(--grid-text) !important;
+}
+
+[data-theme='dark'] .luckysheet-toolbar-button:hover,
+[data-theme='dark'] .luckysheet-toolbar-menu-button:hover,
+[data-theme='dark'] .luckysheet-toolbar-combo-button:hover,
+[data-theme='dark'] .luckysheet-toolbar-button-hover {
+  background-color: rgba(255, 255, 255, 0.09) !important;
+  background-image: none !important;
+  border-color: transparent !important;
+}
+
+[data-theme='dark'] .luckysheet-toolbar-combo-button-open,
+[data-theme='dark'] .luckysheet-toolbar-button-open {
+  background-color: rgba(255, 255, 255, 0.16) !important;
+  background-image: none !important;
+  color: #fff !important;
+}
+
+[data-theme='dark'] .luckysheet-toolbar-separator {
+  border-left-color: #3a404b !important;
+}
+
+/* 输入框聚焦时的白底 */
+[data-theme='dark'] .luckysheet-toolbar-textinput,
+[data-theme='dark'] .luckysheet-toolbar-combo-button-input:focus {
+  background: #2a2e37 !important;
+  color: var(--grid-text) !important;
+}
+
+/* ---------- 公式栏 ---------- */
+[data-theme='dark'] #luckysheet-functionbox-container {
+  border-left-color: #333945 !important;
+}
+
+[data-theme='dark'] #luckysheet-functionbox {
+  background-color: #262a33 !important;
+  color: var(--grid-text) !important;
+}
+
+/* ---------- 底部工作表页签栏 ---------- */
+[data-theme='dark'] .luckysheet-sheet-area {
+  background-color: var(--panel) !important;
+  color: var(--text-secondary) !important;
+}
+
+[data-theme='dark'] .luckysheet-sheets-item {
+  background-color: var(--chip-bg) !important;
+  color: var(--text-secondary) !important;
+  border-color: #333945 !important;
+}
+
+[data-theme='dark'] .luckysheet-sheets-item:hover {
+  background-color: var(--btn-hover) !important;
+}
+
+[data-theme='dark'] .luckysheet-sheets-item-active {
+  background-color: #2f3540 !important;
+  border-top-color: var(--panel) !important;
+  border-bottom-color: #333945 !important;
+  color: var(--text) !important;
+}
+
+[data-theme='dark'] .luckysheet-sheets-item-name {
+  color: inherit !important;
+}
+
+[data-theme='dark'] .luckysheet-sheets-add {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme='dark'] .luckysheet-sheets-add:hover {
+  color: var(--text) !important;
+}
+
+[data-theme='dark'] .luckysheet-sheets-m,
+[data-theme='dark'] .luckysheet-sheets-scroll {
+  color: var(--text-secondary) !important;
+}
+
+/* ---------- 右键菜单 / 列菜单 / 筛选菜单等弹出面板 ---------- */
+[data-theme='dark'] .luckysheet-rightgclick-menu,
+[data-theme='dark'] .luckysheet-rightgclick-menu-sub,
+[data-theme='dark'] .luckysheet-cols-menu,
+[data-theme='dark'] .luckysheet-menuButton,
+[data-theme='dark'] .luckysheet-filter-menu,
+[data-theme='dark'] .luckysheet-filter-submenu,
+[data-theme='dark'] .luckysheet-menu {
+  background-color: var(--panel-2) !important;
+  border-color: #3a404b !important;
+  color: var(--text) !important;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55) !important;
+}
+
+/*
+ * 关键：菜单项文字由深层类硬编码为深色，父级设 color 不会继承生效。
+ *   .luckysheet-cols-menuitem / -content        → #333
+ *   .luckysheet-submenu-arrow                   → #000 + opacity .5
+ *   .luckysheet-cols-menu-btn                   → #5e5e5e
+ *   menuitem 内嵌的数值预览（1000.12、SUM 等）   → #000
+ * 因此对整个菜单子树统一改为浅色。
+ */
+[data-theme='dark'] .luckysheet-cols-menu,
+[data-theme='dark'] .luckysheet-cols-menu *,
+[data-theme='dark'] .luckysheet-rightgclick-menu,
+[data-theme='dark'] .luckysheet-rightgclick-menu *,
+[data-theme='dark'] .luckysheet-menuButton,
+[data-theme='dark'] .luckysheet-menuButton * {
+  color: var(--text) !important;
+}
+
+/* 子菜单箭头原本是纯黑 + 半透明，改浅色后补足不透明度 */
+[data-theme='dark'] .luckysheet-submenu-arrow {
+  color: var(--text-secondary) !important;
+  opacity: 1 !important;
+}
+
+/* 菜单分隔线 */
+[data-theme='dark'] .luckysheet-menuseparator {
+  border-top-color: #333945 !important;
+}
+
+/* 菜单项 hover / 高亮（原为 #efefef 浅灰） */
+[data-theme='dark'] .luckysheet-cols-menu .luckysheet-cols-menuitem-hover,
+[data-theme='dark'] .luckysheet-cols-menu .luckysheet-cols-menuitem:hover,
+[data-theme='dark'] .luckysheet-rightgclick-menu .luckysheet-cols-menuitem-hover,
+[data-theme='dark'] .luckysheet-rightgclick-menu .luckysheet-cols-menuitem:hover,
+[data-theme='dark'] .luckysheet-filter-menu .luckysheet-cols-menuitem:hover,
+[data-theme='dark'] .luckysheet-filter-menu .luckysheet-cols-menuitem:last-child:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 筛选菜单里的输入框 */
+[data-theme='dark'] .luckysheet-filter-menu .luckysheet-cols-menuitem-content input {
+  background-color: #262a33 !important;
+  border-color: #333945 !important;
+  color: var(--grid-text) !important;
+}
+
+/* ---------- spectrum 取色面板（文字颜色 / 单元格底色 / 边框颜色） ---------- */
+[data-theme='dark'] .sp-container,
+[data-theme='dark'] .luckysheet-rightgclick-menu-sub .sp-container {
+  background-color: var(--panel-2) !important;
+  border-color: #3a404b !important;
+}
+
+[data-theme='dark'] .sp-palette-container {
+  border-right-color: #333945 !important;
+}
+
+[data-theme='dark'] .sp-picker-container {
+  border-left-color: #333945 !important;
+}
+
+/* 色板里的“自定义/确定/取消”按钮（原为浅灰渐变底 + 深色字 + 浅色文字阴影） */
+[data-theme='dark'] .sp-container button {
+  background-color: #333945 !important;
+  background-image: none !important;
+  border-color: #454c5a !important;
+  color: var(--text) !important;
+  text-shadow: none !important;
+}
+
+[data-theme='dark'] .sp-container button:hover {
+  background-color: #3f4756 !important;
+  background-image: none !important;
+  border-color: #4d5566 !important;
+}
+
+[data-theme='dark'] .sp-container button:active {
+  background-color: #2b3140 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] .sp-container a.sp-cancel {
+  color: #e0736f !important;
+}
+
+/* 十六进制输入框与颜色预览区（展开“自定义”时可见） */
+[data-theme='dark'] .sp-input {
+  background-color: #262a33 !important;
+  border-color: #454c5a !important;
+  color: var(--grid-text) !important;
+}
+
+[data-theme='dark'] .sp-input:focus {
+  border-color: #4d90fe !important;
+}
+
+[data-theme='dark'] .sp-initial {
+  border-color: #454c5a !important;
+}
+
+/* 色块选中 / 悬停描边（原为橙色，深色下提亮） */
+[data-theme='dark'] .sp-palette .sp-thumb-el.sp-thumb-active,
+[data-theme='dark'] .sp-palette .sp-thumb-el:hover {
+  border-color: #f0a04b !important;
+}
+
+/* ---------- 工具栏“更多”按钮容器 ---------- */
+[data-theme='dark'] #luckysheet-icon-morebtn-div {
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+/* ---------- 公式帮助 / 函数搜索面板 ---------- */
+[data-theme='dark'] .luckysheet-formula-search-c,
+[data-theme='dark'] .luckysheet-formula-help-c {
+  background: var(--panel-2) !important;
+  border-color: #3a404b !important;
+  color: var(--text) !important;
+}
+
+[data-theme='dark'] .luckysheet-formula-search-item,
+[data-theme='dark'] .luckysheet-formula-search-item-active,
+[data-theme='dark'] .luckysheet-formula-help-title {
+  background: var(--panel-2) !important;
+  border-color: #333945 !important;
+  color: var(--text) !important;
+}
+
+[data-theme='dark'] .luckysheet-formula-search-item-active {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ---------- 滚动条（luckysheet 用原生滚动条 + 浅色皮肤，选择器比通用规则更具体） ---------- */
+[data-theme='dark'] .luckysheet-scrollbars::-webkit-scrollbar,
+[data-theme='dark'] .luckysheet-scrollbars::-webkit-scrollbar-track {
+  background-color: var(--panel) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme='dark'] .luckysheet-scrollbars::-webkit-scrollbar-thumb {
+  background-color: #4a5160 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] .luckysheet-scrollbars::-webkit-scrollbar-thumb:hover {
+  background-color: #5b6373 !important;
+}
+
+/* 两端箭头按钮使用浅色 sprite 图片，深色下去掉图片、改用深色底 */
+[data-theme='dark'] .luckysheet-scrollbars::-webkit-scrollbar-button,
+[data-theme='dark'] .luckysheet-scrollbar-ltr::-webkit-scrollbar-button {
+  background-image: none !important;
+  background-color: var(--panel) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme='dark'] .luckysheet-scrollbars::-webkit-scrollbar-corner {
+  background-color: var(--panel) !important;
+}
+
+/* ---------- 名称框（公式栏左侧的 A1 单元格地址框） ---------- */
+[data-theme='dark'] .luckysheet-name-box,
+[data-theme='dark'] #luckysheet-name-box {
+  background-color: #262a33 !important;
+  color: var(--grid-text) !important;
+  border-color: #333945 !important;
+}
+
+/* ---------- 工具栏 / 公式栏 / 底部统计栏 容器（luckysheet 用 id 命名，需显式覆盖） ---------- */
+[data-theme='dark'] #luckysheet-wa-editor,
+[data-theme='dark'] #luckysheet-wa-calculate,
+[data-theme='dark'] .luckysheet-sta-c {
+  background-color: var(--panel) !important;
+  border-color: var(--border) !important;
+  color: var(--grid-text) !important;
+}
+
+/* 工具栏与公式栏内的所有文字/图标统一为浅色（色板指示条用的是 border-color，不受影响） */
+[data-theme='dark'] #luckysheet-wa-editor *,
+[data-theme='dark'] #luckysheet-wa-calculate *,
+[data-theme='dark'] .luckysheet-sta-c * {
+  color: var(--grid-text) !important;
+}
+
+/* 底部统计栏内的按钮/滑轨底色一律透明，避免残留浅色块 */
+[data-theme='dark'] .luckysheet-sta-c * {
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+/* 打印视图按钮的激活态与缩放滑块 */
+[data-theme='dark'] .luckysheet-print-viewBtn-active,
+[data-theme='dark'] .luckysheet-print-viewNormal {
+  background-color: #2f3540 !important;
+}
+
+[data-theme='dark'] #luckysheet-zoom-cursor {
+  background-color: #7d8794 !important;
+}
+
+[data-theme='dark'] #luckysheet-zoom-slider {
+  background-color: #3a404b !important;
+}
+
+/* 名称框（A1 地址）与公式输入框：做成略亮的输入区 */
+[data-theme='dark'] #luckysheet-helpbox,
+[data-theme='dark'] #luckysheet-helpbox-cell,
+[data-theme='dark'] #luckysheet-functionbox-cell,
+[data-theme='dark'] #luckysheet-functionbox {
+  background-color: var(--panel-2) !important;
+  color: var(--grid-text) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme='dark'] #luckysheet-wa-calculate-size {
+  background-color: var(--border) !important;
+}
+
+/* ---------- 容器 1px 描边（否则深色下会留浅色发丝线） ---------- */
+[data-theme='dark'] .luckysheet {
+  border-color: var(--border) !important;
+}
+
+[data-theme='dark'] .luckysheet-sta-c,
+[data-theme='dark'] .luckysheet-sheet-area,
+[data-theme='dark'] #luckysheet-wa-editor,
+[data-theme='dark'] #luckysheet-wa-calculate {
+  border-color: var(--border) !important;
+}
+
+/* ---------- 网格窗口 / 根容器（滚动条留白区露出的就是这层底色） ---------- */
+[data-theme='dark'] .luckysheet,
+[data-theme='dark'] .luckysheet-grid-window,
+[data-theme='dark'] #luckysheet-grid-window-1,
+[data-theme='dark'] #luckysheet-grid-window-2,
+[data-theme='dark'] #luckysheet-cell-main {
+  background-color: var(--grid-surface) !important;
+}
+/*
+ * 注意：#luckysheet-rows-h / #luckysheet-cols-h-c 保持浅色不动。
+ * 它们位于行列标题栏反色覆盖层之下，浅色底反色后正好得到深色标题栏；
+ * 若改成深色，反色后会变亮（双重反色）。
+ */
+
+/* ---------- 其它零散浅色控件 ---------- */
+[data-theme='dark'] #luckysheet-copy-btn {
+  background-color: var(--panel-2) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme='dark'] .luckysheet-cs-draghandle {
+  background-color: #4a5160 !important;
+}
+
+[data-theme='dark'] #luckysheet-bottom-add-row,
+[data-theme='dark'] #luckysheet-bottom-add-row-input,
+[data-theme='dark'] #luckysheet-bottom-bottom-top {
+  background-color: var(--panel-2) !important;
+  color: var(--grid-text) !important;
+  border-color: var(--border) !important;
+}
+
+/* ---------- 行列标题栏（画布同布渲染，颜色硬编码改不了） ----------
+ * 用 backdrop-filter 反色覆盖层把白底标题栏转成深色，
+ * 只覆盖标题栏两条区域，不影响数据区。不支持 backdrop-filter 的浏览器自动降级为浅色标题。
+ */
+.luckysheet-theme-overlay {
+  position: absolute;
+  pointer-events: none;
+  z-index: 3;
+  display: none;
+}
+
+[data-theme='dark'] .luckysheet-theme-overlay {
+  -webkit-backdrop-filter: invert(0.93) hue-rotate(180deg);
+  backdrop-filter: invert(0.93) hue-rotate(180deg);
+  /* 覆盖层边缘的 1px 描边：画布/容器在标题栏边缘画的浅色发丝线
+     （backdrop-filter 的边缘像素不参与采样）由这层描边直接盖掉 */
+  border: 1px solid var(--border);
+}
+
+/* 列标题栏右端与竖向滚动条相邻，边缘线略宽一点以确保盖住 */
+[data-theme='dark'] .luckysheet-theme-overlay-col {
+  border-right-width: 2px;
+}
